@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "pstring.h"
 
-
 void run_main() {
 	Pstring p1;
 	Pstring p2;
