@@ -7,8 +7,13 @@ ErrChoice:
     .string "invalid option!\n"
 RepInputStr:
     .string " %c"
+IntInputStr:
+    .string "%d"
 PrintStr:
-    .string "string is: %s\n"
+    .string "old char: %c, new char: %c, first string: %s, second string:%s\n"
+PrintPstrCpy:
+    .string "length: %d, string: %s\n"
+
 
 .text
 .global run_func
@@ -20,7 +25,7 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     cmp $0, %rcx
     js .LNULL
     jmpq *.switch(,%rcx, 8)
-    ret
+
     
 
 .L50:
@@ -39,12 +44,37 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
 .L55:
 
 .L54:
+    xorq %rax, %rax
 
-    call replaceChar
 .L53:
-    xorl %eax, %eax
-
-
+    xorq %rax, %rax
+    push %rbp # pushing stack pointer backup
+    push %rsi # save p1 and p2 pointers in stack
+    push %rdx
+    movq %rsp, %rbp
+    subq $8, %rsp # opening 8 bytes on stack for user input
+    movq $IntInputStr, %rdi # inputting scanf string
+    movq %rsp, %rsi # inputting scanf variable address
+    push %rax
+    call scanf
+    pop %rax
+    movzbl (%rsp), %r11d
+    push %r11 # push received value 1
+    movq $IntInputStr, %rdi # same as first scanf
+    leaq 8(%rsp), %rsi
+    call scanf
+    movq $0, %rcx
+    movzbl 8(%rsp), %ecx # received value 2 into 4th argument
+    pop %rdx # popping the first index into 3rd argument
+    addq $8, %rsp # returning stack ptr to its place
+    pop %rdi # popping the ptr to p2 into first argument
+    pop %rsi # popping the ptr to p1 into second argument
+    call pstrijcpy
+    movq %rax, %rdx
+    movb (%rdx), %sil
+    movq $PrintPstrCpy, %rdi
+    call printf
+    pop %rbp
     ret
 .L52:
     movq $0, %r9
@@ -62,21 +92,36 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     movq $RepInputStr, %rdi
     movq %rsp, %rsi
     xorq %rax, %rax # rax = 0
-    push %r9
-    push %r9
+    push %r9 # need to push r9 but need the stack to stay 16 aligned for scanf,
+    push %r9 # so r9 is pushed twice and popped twice
     call scanf
     pop %r9
     pop %r9
     movq $0, %r10
     movb (%rsp), %r10b #move result into r10
-    leaq 24(%rsp), %rdi
-    movzbl %r9b, %esi
-    movzbl %r10b, %edx
+    movzbl %r9b, %esi # clear rsi for replacechar and insert the first char
+    movzbl %r10b, %edx #  clear rdx for replacechar and insert the second char
+    addq $16, %rsp # restoring the stack to pop pointer to p2
+    pop %rdi
+    push %r9 # saving first and second chars for second replaceChar call
+    push %r10
     call replaceChar
-    leaq 1(%rax), %rsi
-    xorq %rax, %rax
+    pop %rdx # new char for replaceChar
+    pop %rsi # old char
+    pop %rdi # extracting pointer to p1 into rdi
+    push %rsi # pushing old char and new char for printf later
+    push %rdx # new char
+    push %rax # saving ptr to p2 for prnting later
+    call replaceChar
+    pop %rbx # rbx-> p2
+    pop %rdx # new char
+    pop %rsi # old char
+    leaq 1(%rax), %rcx # now rcx -> p1.str
+    leaq 1(%rbx), %r8 # r8-> p2.str
+    xorq %rax, %rax # clearing rax for printing
     movq $PrintStr, %rdi
     call printf
+    pop %rbp # restoring the stack pointer
     ret
 
 .LNULL:
