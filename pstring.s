@@ -41,38 +41,121 @@ replaceChar: #Pstring* pstr, char oldChar, char newChar
     .globl	pstrijcpy
     .type	pstrijcpy, @function 
 pstrijcpy: # Pstring* dst, Pstring* src, char i, char j
-    movb %dl, %r8b # iter = i
-    cmp (%rdi), %cl # if j is bigger than len(dst) jump .if2
-    jns .if2
-    cmp (%rsi), %cl # if j is bigger than len(src) jump .if2
-    jns .if2
+    movzb %dl, %r8 # iter = i
+    movzb (%rdi), %r11 # r11 = lenn(dst)
+    movzb (%rsi), %r10 # r10 = len(src)
+    cmp %r11b, %cl # if j >= len(dst) jump .if2
+    jge .if2
+    cmp %r10b, %cl # if j >= len(src) jump .if2
+    jge .if2
     cmp $0, %cl # if i < 0 jump .if2
     js .if2
-    cmp %cl, %dl # if j < i jump .if2
+    cmp %dl, %cl # if j < i jump .if2
     js .if2
     jmp .cont # if all is well, continue
     .if2: # print error
         xorq %rax, %rax
-        push %rsi
-        movq errout, %rsi
+        movq $errout, %rdi
         call printf@plt
+        movq $-1, %rax
+        ret
     .cont:
         movzb %dl, %r8 #initializing iter to i
         add $1, %r8 # adding 1 to ignore len char at start of string
+        add $1, %rcx
         .while2:
-            leaq (%rdi, %r8), %r9 # r9 = src + iter
-            leaq (%rsi, %r8), %r10 # r10 = dst + iter
-            movq (%r9), %r11
-            movq %r11, (%r10) # dst[r10] = src[r9]
-            cmp %r8, %rcx # if iter == j, exit loop
-            jne .while2
+            leaq (%rsi, %r8), %r9 # r9 = src + iter
+            leaq (%rdi, %r8), %r10 # r10 = dst + iter
+            movzb (%r9), %r11
+            movb %r11b, (%r10) # dst[r10] = src[r9]
             addq $1, %r8 # iter++
+            cmp %r8, %rcx # if iter > j, exit loop
+            jns .while2
         movq %rdi, %rax
         ret
 
-    
+
+    .globl	swapCase
+    .type	swapCase, @function
+swapCase: # Pstring* p1
+    leaq 1(%rdi), %rsi # put address of string into rsi
+    movzb (%rdi), %rdx # length of p1 into rdx
+    movq $1, %rcx # initializing iter
+    .while3:
+        leaq (%rdi, %rcx), %rsi # rsi = rdi + iter
+        movzb (%rsi), %r8 # r8 = p1[iter]
+        cmp $65, %r8  # if A > r8  continue
+        jb  .cont2
+        cmp $122, %r8  # if z < r8 continue
+        jns .cont2
+        cmp  $90, %r8 # if r8 < [ make it lower case
+        js .upper
+        cmp $97, %r8  # if r8 > ' make it upper case
+        jns .lower
+        jmp .cont2 # if none of the above apply continue
+        .lower:
+            subq $32, (%rsi) # sub 32 from lower case ascii to make it upper case
+            jmp .cont2
+        .upper: # add 32 to an uppercase ascii to make it lower case
+            addq $32, (%rsi)
+        .cont2:
+            addq $1, %rcx
+            cmp %rcx, %rdx # if iter >= len
+            jns .while3
+    movq %rdi, %rax
+    ret
+
+
+    .globl	pstrijcmp
+    .type	pstrijcmp, @function
+pstrijcmp: # Pstring* 1, Pstring* 2, char i, char j
+    movzb %dl, %r8 # iter = i
+    movzb (%rdi), %r11 # r11 = lenn(1)
+    movzb (%rsi), %r10 # r10 = len(2)
+    cmp %r11b, %cl # if j >= len(1) jump .if2
+    jge .if3
+    cmp %r10b, %cl # if j >= len(2) jump .if2
+    jge .if3
+    cmp $0, %cl # if i < 0 jump .if2
+    js .if3
+    cmp %dl, %cl # if j < i jump .if2
+    js .if3
+    jmp .cont5 # if all is well, continue
+    .if3: # print error
+        xorq %rax, %rax
+        movq $errout, %rdi
+        call printf@plt
+        movq $-2, %rax
+        ret
+    .cont5:
+        movzb %dl, %r8 #initializing iter to i
+        add $1, %r8 # adding 1 to ignore len char at start of string
+        add $1, %rcx
+        .while4:
+            leaq (%rsi, %r8), %r9 # r9 = 2 + iter
+            leaq (%rdi, %r8), %r10 # r10 = 1 + iter
+            movzb (%r9), %r9 # r9 = 2[r9]
+            movzb (%r10), %r10 # r10 = 1[r10]
+            cmp %r9, %r10
+            je .cont4
+            js .r9Bigger
+            jns .r10Bigger
+            .r9Bigger:
+                movq $-1, %rax
+                ret
+            .r10Bigger:
+                movq $1, %rax
+                ret
+            .cont4:
+            addq $1, %r8 # iter++
+            cmp %r8, %rcx # if iter > j, exit loop
+            jns .while4
+        movq $0, %rax
+        ret
+
+
 # working print:
-    #push %rbx
+    #push %rbxv
     #xorl %eax, %eax
     #movzbl (%rdi), %esi
     #push %rdi

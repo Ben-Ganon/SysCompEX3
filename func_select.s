@@ -1,4 +1,4 @@
-#include "pstring.s"
+.extern "pstring.s"
         .file	"func_select.s"
         .section .rodata
 Out50:
@@ -13,7 +13,10 @@ PrintStr:
     .string "old char: %c, new char: %c, first string: %s, second string:%s\n"
 PrintPstrCpy:
     .string "length: %d, string: %s\n"
-
+PrintSwapCase:
+    .string "length: %d, string: %s\n"
+PrintCmpPstr:
+    .string "compare result: %d\n"
 
 .text
 .global run_func
@@ -42,9 +45,66 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     pop %r15
     ret
 .L55:
-
-.L54:
     xorq %rax, %rax
+    push %rbp # pushing stack pointer backup
+    push %rsi # save p1 and p2 pointers in stack
+    push %rdx
+    movq %rsp, %rbp
+    subq $8, %rsp # opening 8 bytes on stack for user input
+    movq $IntInputStr, %rdi # inputting scanf string
+    movq %rsp, %rsi # inputting scanf variable address
+    push %rax
+    call scanf
+    pop %rax
+    movzbl (%rsp), %r11d
+    push %r11 # push received value 1
+    movq $IntInputStr, %rdi # same as first scanf
+    leaq 12(%rsp), %rsi
+    call scanf
+    movq $0, %rcx
+    leaq 12(%rsp), %r8
+    movzbl (%r8), %ecx # received value 2 into 4th argument
+    pop %rdx # popping the first index into 3rd argument
+    addq $8, %rsp # returning stack ptr to its place
+    pop %rsi # popping the ptr to pstr2 into 2 arg
+    pop %rdi # popping the ptr to pstr1 into 1 arg
+    call pstrijcmp
+    cmp $-2, %rax
+    je .end
+    movq $PrintCmpPstr, %rdi
+    movq %rax, %rsi
+    call printf
+    .end2:
+    pop %rbp
+    ret
+.L54:
+    push %rbp # save rbp
+    movq %rsp, %rbp
+    movq %rsi, %rdi # move p1 pointer into appropriate register
+    push %rdx # save p2 for later
+    call swapCase
+    movq %rax, %rsi # save return p1 ptr
+    pop %rdi # pop p2 ptr for swapcase
+    push %rsi # save p1 ptr
+    call swapCase
+    pop %rdx # pop p1 ptr
+    push %rax # save return p2 ptr
+    movzb (%rdx), %rsi # save p1 len for print
+    addq $1, %rdx
+    movq $PrintSwapCase, %rdi
+    push %rax # dummy push for printf stack alignment
+    xorq %rax, %rax
+    call printf
+    pop %rax
+    pop %rdx # pop p2 ptr
+    movzb (%rdx), %rsi # p2 len for print
+    addq $1, %rdx
+    movq $PrintSwapCase, %rdi
+    xorq %rax, %rax
+    call printf
+    pop %rbp
+    ret
+
 
 .L53:
     xorq %rax, %rax
@@ -61,21 +121,27 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     movzbl (%rsp), %r11d
     push %r11 # push received value 1
     movq $IntInputStr, %rdi # same as first scanf
-    leaq 8(%rsp), %rsi
+    leaq 12(%rsp), %rsi
     call scanf
     movq $0, %rcx
-    movzbl 8(%rsp), %ecx # received value 2 into 4th argument
+    leaq 12(%rsp), %r8
+    movzbl (%r8), %ecx # received value 2 into 4th argument
     pop %rdx # popping the first index into 3rd argument
     addq $8, %rsp # returning stack ptr to its place
-    pop %rdi # popping the ptr to p2 into first argument
-    pop %rsi # popping the ptr to p1 into second argument
+    pop %rsi # popping the ptr to p2 into src arg
+    pop %rdi # popping the ptr to p1 into dst arg
     call pstrijcpy
+    cmp $-1, %rax
+    je .end
     movq %rax, %rdx
-    movb (%rdx), %sil
+    addq $1, %rdx
+    movzb (%rax), %rsi
     movq $PrintPstrCpy, %rdi
     call printf
+    .end:
     pop %rbp
     ret
+
 .L52:
     movq $0, %r9
     xorq %rax, %rax # rax = 0
