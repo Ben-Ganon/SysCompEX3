@@ -1,4 +1,3 @@
-.extern "pstring.s"
         .file	"func_select.s"
         .section .rodata
 Out50:
