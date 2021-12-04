@@ -9,7 +9,7 @@ RepInputStr:
 IntInputStr:
     .string "%d"
 PrintStr:
-    .string "old char: %c, new char: %c, first string: %s, second string:%s\n"
+    .string "old char: %c, new char: %c, first string: %s, second string: %s\n"
 PrintPstrCpy:
     .string "length: %d, string: %s\n"
 PrintSwapCase:
