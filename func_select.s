@@ -127,6 +127,8 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     addq $8, %rsp # returning stack ptr to its place
     pop %rsi # popping the ptr to p2 into src arg
     pop %rdi # popping the ptr to p1 into dst arg
+    push %rsi
+    push %rsi
     call pstrijcpy
     cmp $-1, %rax
     je .end
@@ -134,6 +136,12 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     addq $1, %rdx
     movzb (%rax), %rsi
     movq $PrintPstrCpy, %rdi
+    call printf
+    movq $PrintPstrCpy, %rdi
+    pop %rdx
+    pop %rdx
+    movzb (%rdx), %rsi
+    add $1, %rdx
     call printf
     .end:
     pop %rbp
