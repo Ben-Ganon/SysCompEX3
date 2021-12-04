@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include "run_main-test.c"
+extern void run_main();
 
 int main() {
 	run_main();
