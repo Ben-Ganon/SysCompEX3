@@ -68,8 +68,6 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     pop %rsi # popping the ptr to pstr2 into 2 arg
     pop %rdi # popping the ptr to pstr1 into 1 arg
     call pstrijcmp
-    cmp $-2, %rax
-    je .end
     movq $PrintCmpPstr, %rdi
     movq %rax, %rsi
     call printf
