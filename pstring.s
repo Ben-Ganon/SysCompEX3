@@ -100,7 +100,7 @@ swapCase: # Pstring* p1
             addq $32, (%rsi)
         .cont2:
             addq $1, %rcx
-            cmp %rcx, %rdx # if iter >= len
+            cmp %rcx, %rdx # if iter >= len exit loop
             jns .while3
     movq %rdi, %rax
     ret
@@ -137,9 +137,9 @@ pstrijcmp: # Pstring* 1, Pstring* 2, char i, char j
             movzb (%r9), %r9 # r9 = 2[r9]
             movzb (%r10), %r10 # r10 = 1[r10]
             cmp %r9, %r10
-            je .cont4
-            js .r9Bigger
-            jns .r10Bigger
+            je .cont4 # the chars are equal, continue
+            js .r9Bigger # the char in p2 is bigger
+            jns .r10Bigger # the char in p1 is bigger
             .r9Bigger:
                 movq $-1, %rax
                 ret

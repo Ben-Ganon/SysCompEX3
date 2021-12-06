@@ -130,19 +130,19 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     push %rsi
     push %rsi
     call pstrijcpy
-    cmp $-1, %rax
+    cmp $-1, %rax # if return value is -1 exit with error
     je .end
     movq %rax, %rdx
-    addq $1, %rdx
-    movzb (%rax), %rsi
+    addq $1, %rdx # getting the address of p1.str into rdx
+    movzb (%rax), %rsi # p1.len into rsi
     movq $PrintPstrCpy, %rdi
-    call printf
+    call printf # print p1
     movq $PrintPstrCpy, %rdi
     pop %rdx
     pop %rdx
     movzb (%rdx), %rsi
     add $1, %rdx
-    call printf
+    call printf # print p2
     .end:
     pop %rbp
     ret
@@ -195,11 +195,11 @@ run_func: # opt in rdi, p1 in rsi, p2 in rdx
     pop %rbp # restoring the stack pointer
     ret
 
-.LNULL:
+.LNULL: # incorrect option picked
    xorq %rax, %rax
    push %rax
    movq $ErrChoice, %rdi
-   call printf
+   call printf # print error message and quit
    pop %rax
    ret
         

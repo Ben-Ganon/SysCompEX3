@@ -35,7 +35,7 @@ run_main:
     movzbl (%rax), %rdi # value of opt into first arg of run_func
     leaq (%rsp), %rsi # address of p1 into run_func second arg
     leaq 256(%rsp), %rdx # address of p2 into run_func third arg
-    call run_func
-    addq $528, %rsp
+    call run_func # call func select with opt input
+    addq $528, %rsp # return stack to oriinal
     pop %rbp
     ret
