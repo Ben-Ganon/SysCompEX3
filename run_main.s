@@ -15,8 +15,6 @@ PrintSelect:
 run_main:
     push %rbp
     movq %rsp, %rbp
-    movq $PrintInput, %rdi # print input message
-    call printf
     subq $528, %rsp # 256 bytes of pstring x2 plus 4 bytes for opt plus 12 for stack alignment (scanf requires 16)
     movq $ScanInNum, %rdi # scanf string
     leaq (%rsp), %rsi # address of p1.len
@@ -24,16 +22,12 @@ run_main:
     movq $ScanInString, %rdi
     leaq 1(%rsp), %rsi # address of p1.str
     call scanf
-    movq $PrintInput, %rdi # print input message
-    call printf
     movq $ScanInNum, %rdi # scanf string
     leaq 256(%rsp), %rsi # address of p2.len
     call scanf
     movq $ScanInString, %rdi
     leaq 257(%rsp), %rsi # address of p2.str
     call scanf
-    movq $PrintSelect, %rdi
-    call printf
     movq $ScanInNum, %rdi
     leaq 512(%rsp), %rsi # address of opt
     call scanf
